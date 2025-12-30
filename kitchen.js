@@ -1,5 +1,5 @@
 /* ================= CONFIG ================= */
-const API_BASE = "https://scan2eat-backend.onrender.com";
+const API_BASE = "https://YOUR-RAILWAY-BACKEND.up.railway.app"; // 🔁 CHANGE THIS
 const KITCHEN_TOKEN = "scan2eat-kitchen-secret";
 
 /* ================= SOCKET ================= */
@@ -41,8 +41,8 @@ async function loadOrders(playAlert = false) {
     const orders = await res.json();
 
     // Kitchen sees ONLY pending + cooking
-    const visible = orders.filter(o =>
-      o.status === "pending" || o.status === "cooking"
+    const visible = orders.filter(
+      o => o.status === "pending" || o.status === "cooking"
     );
 
     ordersDiv.innerHTML = "";

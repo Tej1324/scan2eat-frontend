@@ -1,5 +1,5 @@
 /* ================= CONFIG ================= */
-const API_BASE = "https://scan2eat-backend.onrender.com";
+const API_BASE = "https://YOUR-RAILWAY-BACKEND.up.railway.app"; // 🔁 CHANGE THIS
 
 /* ================= SOCKET ================= */
 const socket = io(API_BASE);
@@ -63,7 +63,7 @@ async function archiveOrder(orderId) {
       method: "PATCH"
     });
 
-    loadOrders(); // refresh list
+    loadOrders();
   } catch (err) {
     console.error("Archive failed:", err);
   }
@@ -90,7 +90,6 @@ function renderOrder(order) {
     </p>
   `;
 
-  /* ITEMS */
   const list = document.createElement("ul");
   list.className = "list-disc pl-5 text-sm";
 
@@ -100,7 +99,6 @@ function renderOrder(order) {
     list.appendChild(li);
   });
 
-  /* ACTIONS */
   const actions = document.createElement("div");
   actions.className = "mt-3";
 

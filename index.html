@@ -40,19 +40,20 @@
   </div>
 
   <script>
-    function goToMenu(e) {
-      e.preventDefault();
+  function goToMenu(e) {
+    e.preventDefault();
 
-      const table = document.getElementById("tableSelect").value;
-      const tableNum = parseInt(table);
+    const table = document.getElementById("tableSelect").value;
+    const tableNum = parseInt(table);
 
-      if (!table || isNaN(tableNum) || tableNum <= 0) {
-        alert("Please select a valid table.");
-        return;
-      }
-
-      window.location.href = `menu.html?table=${tableNum}`;
+    if (!table || isNaN(tableNum) || tableNum <= 0) {
+      alert("Please select a valid table.");
+      return;
     }
-  </script>
+
+    window.location.href = `./menu.html?table=${tableNum}`;
+  }
+</script>
+
 </body>
 </html>
