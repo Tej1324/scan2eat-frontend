@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select Table - TableQR</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen font-sans">
+  <div class="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full text-center">
+    <h1 class="text-2xl font-bold mb-6 text-green-700">Welcome to TableQR</h1>
+
+    <form onsubmit="goToMenu(event)">
+      <label for="tableSelect" class="block text-gray-700 font-medium mb-2">
+        Select Your Table
+      </label>
+
+      <select
+        id="tableSelect"
+        class="w-full border border-gray-300 rounded px-4 py-2 mb-6
+               focus:outline-none focus:ring-2 focus:ring-green-400"
+        required
+      >
+        <option value="">-- Choose Table --</option>
+        <option value="1">Table 1</option>
+        <option value="2">Table 2</option>
+        <option value="3">Table 3</option>
+        <option value="4">Table 4</option>
+        <option value="5">Table 5</option>
+      </select>
+
+      <button
+        type="submit"
+        class="bg-green-600 text-white px-6 py-2 rounded
+               hover:bg-green-700 transition w-full"
+      >
+        Continue
+      </button>
+    </form>
+  </div>
+
+  <script>
+    function goToMenu(e) {
+      e.preventDefault();
+
+      const table = document.getElementById("tableSelect").value;
+      const tableNum = parseInt(table);
+
+      if (!table || isNaN(tableNum) || tableNum <= 0) {
+        alert("Please select a valid table.");
+        return;
+      }
+
+      window.location.href = `menu.html?table=${tableNum}`;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cart - TableQR</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    rel="stylesheet"
+  />
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+<!-- Header -->
+<header class="bg-white shadow fixed top-0 left-0 w-full z-50">
+  <div class="max-w-6xl mx-auto flex items-center justify-between p-4">
+    <h1 class="text-2xl font-bold text-green-700">🛒 Cart</h1>
+    <span class="text-sm text-gray-600">
+      Table <strong id="tableId">-</strong>
+    </span>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="pt-24 pb-10 px-4 max-w-6xl mx-auto">
+  <h2 class="text-xl font-semibold mb-4 text-gray-800">Your Order</h2>
+
+  <div id="cartItems" class="space-y-4"></div>
+
+  <p id="emptyMessage" class="hidden text-gray-500 text-sm">
+    Your cart is empty. Go back to the menu to add items.
+  </p>
+
+  <div
+    id="summarySection"
+    class="mt-6 flex justify-between items-center hidden"
+  >
+    <strong class="text-lg text-gray-700">
+      Total: ₹<span id="total">0</span>
+    </strong>
+
+    <button
+      onclick="placeOrder()"
+      class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition"
+    >
+      ✅ Place Order
+    </button>
+  </div>
+</main>
+
+<script>
+/* ================= CONFIG ================= */
+const API_BASE = "https://scan2eat-backend.onrender.com";
+
+/* ================= TABLE ================= */
+const params = new URLSearchParams(window.location.search);
+const tableParam = params.get("table");
+const tableId = Number(tableParam);
+
+if (!tableId || isNaN(tableId) || tableId <= 0) {
+  alert("Invalid table ID. Redirecting...");
+  window.location.href = "menu.html";
+}
+
+document.getElementById("tableId").innerText = tableId;
+
+/* ================= CART ================= */
+const cartKey = `cart_table_${tableId}`;
+let cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+
+const cartItemsDiv = document.getElementById("cartItems");
+const totalSpan = document.getElementById("total");
+const emptyMessage = document.getElementById("emptyMessage");
+const summarySection = document.getElementById("summarySection");
+
+/* ================= HELPERS ================= */
+function calculateTotal() {
+  return cart.reduce(
+    (sum, item) => sum + Number(item.price) * Number(item.qty || 1),
+    0
+  );
+}
+
+/* ================= RENDER ================= */
+function renderCart() {
+  cartItemsDiv.innerHTML = "";
+
+  if (!cart.length) {
+    emptyMessage.classList.remove("hidden");
+    summarySection.classList.add("hidden");
+    totalSpan.textContent = "0";
+    return;
+  }
+
+  emptyMessage.classList.add("hidden");
+  summarySection.classList.remove("hidden");
+
+  cart.forEach((item, idx) => {
+    const qty = Number(item.qty || 1);
+    const itemTotal = Number(item.price) * qty;
+
+    const div = document.createElement("div");
+    div.className = "bg-white p-4 rounded shadow";
+
+    div.innerHTML = `
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="font-semibold">${item.emoji || ""} ${item.name}</h3>
+          <p class="text-sm text-gray-600">
+            ₹${item.price} × ${qty} = ₹${itemTotal}
+          </p>
+          ${
+            item.spec
+              ? `<p class="text-xs text-gray-500 mt-1 italic">Spec: ${item.spec}</p>`
+              : ""
+          }
+        </div>
+
+        <div class="flex flex-col items-end space-y-1">
+          <div class="flex items-center space-x-2 text-sm">
+            <button onclick="changeQty(${idx}, -1)"
+              class="px-2 py-0.5 border rounded">-</button>
+            <span>${qty}</span>
+            <button onclick="changeQty(${idx}, 1)"
+              class="px-2 py-0.5 border rounded">+</button>
+          </div>
+          <button onclick="removeItem(${idx})"
+            class="text-red-500 hover:underline text-xs">
+            Remove
+          </button>
+        </div>
+      </div>
+    `;
+
+    cartItemsDiv.appendChild(div);
+  });
+
+  totalSpan.textContent = calculateTotal();
+}
+
+/* ================= CART ACTIONS ================= */
+function changeQty(index, delta) {
+  if (!cart[index]) return;
+
+  const newQty = Number(cart[index].qty || 1) + delta;
+
+  if (newQty <= 0) {
+    cart.splice(index, 1);
+  } else {
+    cart[index].qty = newQty;
+  }
+
+  localStorage.setItem(cartKey, JSON.stringify(cart));
+  renderCart();
+}
+
+function removeItem(index) {
+  cart.splice(index, 1);
+  localStorage.setItem(cartKey, JSON.stringify(cart));
+  renderCart();
+}
+
+/* ================= PLACE ORDER ================= */
+async function placeOrder() {
+  if (!cart.length) {
+    alert("Your cart is empty.");
+    return;
+  }
+
+  const items = cart.map(item => ({
+    name: item.name,
+    price: Number(item.price),
+    qty: Number(item.qty || 1)
+  }));
+
+  console.log("📦 ORDER PAYLOAD:", { tableId, items });
+
+  try {
+    const res = await fetch(`${API_BASE}/api/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ tableId, items })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Order failed");
+    }
+
+    localStorage.removeItem(cartKey);
+    alert("✅ Order placed successfully!");
+    window.location.href = `menu.html?table=${tableId}`;
+  } catch (err) {
+    console.error("❌ Order error:", err);
+    alert(err.message || "Something went wrong.");
+  }
+}
+
+/* ================= INIT ================= */
+renderCart();
+</script>
+
+</body>
+</html>

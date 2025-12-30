@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cashier - TableQR</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+<!-- Header -->
+<header class="bg-white shadow fixed top-0 left-0 w-full z-50">
+  <div class="max-w-6xl mx-auto flex items-center justify-between p-4">
+    <h1 class="text-2xl font-bold text-green-700">Cashier Panel</h1>
+    <span class="text-sm text-gray-600">Live Orders</span>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="pt-24 pb-10 px-4 max-w-6xl mx-auto">
+  <h2 class="text-xl font-semibold mb-4 text-gray-800">Pending Orders</h2>
+
+  <!-- Empty State (STATIC) -->
+  <p id="emptyState" class="text-sm text-gray-500">
+    No pending orders yet.
+  </p>
+
+  <!-- Orders List (DYNAMIC) -->
+  <div id="ordersList" class="space-y-4 mt-4"></div>
+</main>
+<script src="cashier.js"></script>
+
+</body>
+</html>

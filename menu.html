@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TableQR - Menu</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+
+  <!-- Header -->
+  <header class="bg-white shadow fixed top-0 left-0 w-full z-50">
+    <div class="max-w-6xl mx-auto flex items-center justify-between p-4">
+      <h1 class="text-2xl font-bold text-green-700">TableQR</h1>
+      <span class="text-sm text-gray-600">
+        Table <strong id="tableId">-</strong>
+      </span>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="pt-24 pb-10 px-4 max-w-6xl mx-auto">
+    <h2 class="text-xl font-semibold mb-4 text-gray-800">Menu</h2>
+    <div id="menu" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <!-- Bottom bar -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white shadow-inner py-4 px-6 flex justify-between items-center">
+    <p class="text-sm text-gray-600">Ready to place your order?</p>
+    <button
+      id="cartButton"
+      onclick="goToCart()"
+      class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition flex items-center"
+    >
+      🛒 <span class="ml-2">Review Cart</span>
+    </button>
+  </div>
+
+  <script>
+    // ---------- TABLE ID ----------
+    const params = new URLSearchParams(window.location.search);
+    const tableParam = params.get("table");
+    const tableId = parseInt(tableParam);
+
+    if (!tableId || isNaN(tableId) || tableId <= 0) {
+      alert("Invalid or missing table ID. Redirecting...");
+      window.location.href = "index.html";
+    } else {
+      document.getElementById("tableId").innerText = tableId;
+    }
+
+    // ---------- MENU DATA ----------
+    const menuItems = [
+      { id: 1, name: "Paneer Butter Masala", price: 180, emoji: "🧀" },
+      { id: 2, name: "Chicken Biryani", price: 220, emoji: "🍗" },
+      { id: 3, name: "Butter Naan", price: 30, emoji: "🍞" },
+      { id: 4, name: "Gulab Jamun", price: 50, emoji: "🍬" },
+      { id: 5, name: "Cold Coffee", price: 60, emoji: "🥤" },
+      { id: 6, name: "Veg Manchurian", price: 150, emoji: "🥦" }
+    ];
+
+    // ---------- CART ----------
+    const cartKey = `cart_table_${tableId}`;
+    const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+    const menuDiv = document.getElementById("menu");
+
+    // Render menu
+    menuItems.forEach(item => {
+      const div = document.createElement("div");
+      div.className =
+        "bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition";
+
+      div.innerHTML = `
+        <div class="p-4">
+          <h3 class="text-lg font-bold text-gray-800 mb-1">${item.emoji} ${item.name}</h3>
+          <p class="text-gray-600 text-sm mb-3">₹${item.price}</p>
+          <textarea
+            id="spec-${item.id}"
+            placeholder="Any specifications?"
+            maxlength="100"
+            rows="2"
+            class="w-full p-2 text-sm border border-gray-300 rounded
+                   focus:outline-none focus:ring-2 focus:ring-green-400 resize-none"
+          ></textarea>
+        </div>
+        <div class="bg-gray-100 p-4">
+          <button
+            type="button"
+            onclick="addToCart(${item.id})"
+            class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+          >
+            Add to Cart
+          </button>
+        </div>
+      `;
+      menuDiv.appendChild(div);
+    });
+
+    // ---------- FUNCTIONS ----------
+    function addToCart(id) {
+      const item = menuItems.find(i => i.id === id);
+      if (!item) return;
+
+      const specField = document.getElementById(`spec-${id}`);
+      const spec = (specField.value || "").trim().slice(0, 100);
+
+      const exists = cart.find(i => i.id === id && i.spec === spec);
+      if (exists) {
+        alert("Item with same specifications is already in the cart.");
+        return;
+      }
+
+      cart.push({ ...item, spec, qty: 1 });
+      localStorage.setItem(cartKey, JSON.stringify(cart));
+
+      specField.value = ""; // clear after add
+      updateCartBadge();
+      alert(`${item.name} added to cart.`);
+    }
+
+    function goToCart() {
+      window.location.href = `cart.html?table=${tableId}`;
+    }
+
+    function updateCartBadge() {
+      const cartButton = document.getElementById("cartButton");
+      const oldBadge = cartButton.querySelector(".cart-count");
+      if (oldBadge) oldBadge.remove();
+
+      if (cart.length > 0) {
+        const badge = document.createElement("span");
+        badge.textContent = `(${cart.length})`;
+        badge.className = "cart-count ml-2 text-white text-sm";
+        cartButton.appendChild(badge);
+      }
+    }
+
+    updateCartBadge();
+  </script>
+</body>
+</html>

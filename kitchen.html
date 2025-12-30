@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Kitchen Dashboard – Scan2Eat</title>
+
+  <!-- Disable favicon request -->
+  <link rel="icon" href="data:," />
+
+  <!-- Tailwind CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+  <main class="max-w-6xl mx-auto p-6">
+
+    <!-- HEADER -->
+    <div class="flex flex-col gap-4 mb-6">
+
+      <!-- TITLE + NAV BUTTONS -->
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <h1 class="text-2xl font-bold text-gray-800">
+          🍳 Kitchen Dashboard
+        </h1>
+
+        <div class="flex gap-2">
+          <!-- Pending Orders -->
+          <button
+            class="bg-gray-900 text-white px-4 py-2 rounded text-sm cursor-default"
+          >
+            📋 Pending Orders
+          </button>
+
+          <!-- Completed Orders -->
+          <a
+            href="completedorders.html"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
+          >
+            ✅ Completed Orders
+          </a>
+        </div>
+      </div>
+
+      <!-- LEGEND + SOUND -->
+      <div class="flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-2 text-xs text-gray-700">
+          <span class="w-3 h-3 bg-red-600 inline-block rounded"></span> New
+          <span class="w-3 h-3 bg-yellow-500 inline-block rounded ml-2"></span> Cooking
+        </div>
+
+        <button
+          id="enableSound"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+        >
+          🔊 Enable Sound
+        </button>
+      </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <p
+      id="emptyState"
+      class="text-gray-500 text-sm text-center mt-16"
+    >
+      ⏳ Waiting for orders…
+    </p>
+
+    <!-- ORDERS -->
+    <div id="orders" class="space-y-6 mt-4"></div>
+
+  </main>
+
+  <!-- Kitchen Logic -->
+  <script src="kitchen.js"></script>
+</body>
+</html>
