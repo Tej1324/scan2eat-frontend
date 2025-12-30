@@ -162,7 +162,6 @@ function removeItem(index) {
   renderCart();
 }
 
-/* ================= PLACE ORDER ================= */
 async function placeOrder() {
   if (!cart.length) {
     alert("Your cart is empty.");
@@ -180,9 +179,7 @@ async function placeOrder() {
   try {
     const res = await fetch(`${API_BASE}/api/orders`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      // 🚨 NO HEADERS — THIS IS THE KEY
       body: JSON.stringify({ tableId, items })
     });
 
@@ -195,6 +192,7 @@ async function placeOrder() {
     localStorage.removeItem(cartKey);
     alert("✅ Order placed successfully!");
     window.location.href = `./menu.html?table=${tableId}`;
+
   } catch (err) {
     console.error("❌ Order error:", err);
     alert(err.message || "Something went wrong.");
