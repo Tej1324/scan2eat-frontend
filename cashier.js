@@ -1,5 +1,5 @@
 /* ================= CONFIG ================= */
-const API_BASE = "https://YOUR-RAILWAY-BACKEND.up.railway.app"; // 🔁 CHANGE THIS
+const API_BASE = "https://scan2eat-backend-production.up.railway.app";
 const CASHIER_TOKEN = "scan2eat-cashier-secret";
 
 /* ================= SOCKET ================= */
