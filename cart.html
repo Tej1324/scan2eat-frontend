@@ -52,7 +52,7 @@
 
 <script>
 /* ================= CONFIG ================= */
-const API_BASE = "https://scan2eat-backend.up.railway.app";
+const API_BASE = "https://scan2eat-backend-production.up.railway.app";
 
 /* ================= TABLE ================= */
 const params = new URLSearchParams(window.location.search);
@@ -178,10 +178,13 @@ async function placeOrder() {
 
   try {
     const res = await fetch(`${API_BASE}/api/orders`, {
-      method: "POST",
-      // 🚨 NO HEADERS — THIS IS THE KEY
-      body: JSON.stringify({ tableId, items })
-    });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ tableId, items })
+});
+
 
     const data = await res.json();
 
