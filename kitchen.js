@@ -9,14 +9,18 @@ const socket = io(API_BASE);
 const ordersDiv = document.getElementById("orders");
 const emptyState = document.getElementById("emptyState");
 const enableSoundBtn = document.getElementById("enableSound");
+const urgentCountEl = document.getElementById("urgentCount");
 
 /* ================= STATE ================= */
 let soundEnabled = false;
+let knownOrderIds = new Set();
+
 const alertAudio = new Audio(
   "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
 );
 
 /* ================= HELPERS ================= */
+
 function minutesAgo(date) {
   return Math.floor((Date.now() - new Date(date).getTime()) / 60000);
 }
@@ -27,11 +31,19 @@ function playSound() {
   alertAudio.play().catch(() => {});
 }
 
-function borderColor(status) {
-  if (status === "pending") return "border-red-600";
-  if (status === "cooking") return "border-yellow-500";
-  if (status === "ready") return "border-green-600";
-  return "border-gray-400";
+/* TIMER → PRIORITY COLOR */
+function urgencyClass(mins) {
+  if (mins >= 20) return "border-red-600 animate-pulse";
+  if (mins >= 10) return "border-yellow-500";
+  return "border-green-500";
+}
+
+function statusBadge(status) {
+  if (status === "pending")
+    return `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs">NEW</span>`;
+  if (status === "cooking")
+    return `<span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs">COOKING</span>`;
+  return "";
 }
 
 /* ================= LOAD ORDERS ================= */
@@ -40,50 +52,71 @@ async function loadOrders(playAlert = false) {
     const res = await fetch(`${API_BASE}/api/orders`);
     const orders = await res.json();
 
-    // Kitchen sees ONLY pending + cooking
-    const visible = orders.filter(
-      o => o.status === "pending" || o.status === "cooking"
-    );
+    const visible = orders
+      .filter(o => o.status === "pending" || o.status === "cooking")
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
     ordersDiv.innerHTML = "";
 
     if (!visible.length) {
       emptyState.style.display = "block";
+      urgentCountEl.innerText = "0";
       return;
     }
 
     emptyState.style.display = "none";
-    if (playAlert) playSound();
 
-    visible.forEach(renderOrder);
+    let urgentCount = 0;
+
+    visible.forEach(order => {
+      const mins = minutesAgo(order.createdAt);
+
+      if (mins >= 20) urgentCount++;
+
+      if (!knownOrderIds.has(order._id) && playAlert) {
+        playSound();
+      }
+
+      knownOrderIds.add(order._id);
+      renderOrder(order, mins);
+    });
+
+    urgentCountEl.innerText = urgentCount;
+
   } catch (err) {
     console.error("Kitchen load error:", err);
   }
 }
 
 /* ================= RENDER ================= */
-function renderOrder(order) {
-  const mins = minutesAgo(order.createdAt);
+function renderOrder(order, mins) {
   const id = order._id;
 
   const card = document.createElement("div");
   card.className = `
     bg-white shadow rounded-xl p-4 border-l-8
-    ${borderColor(order.status)}
+    ${urgencyClass(mins)}
   `;
 
   card.innerHTML = `
     <div class="flex justify-between items-center mb-2">
-      <h2 class="text-lg font-bold">Table ${order.tableId}</h2>
+      <div class="flex items-center gap-2">
+        <h2 class="text-lg font-bold">Table ${order.tableId}</h2>
+        ${statusBadge(order.status)}
+      </div>
       <span class="text-sm text-gray-600">⏱ ${mins} min</span>
     </div>
   `;
 
   const list = document.createElement("ul");
   list.className = "list-disc pl-5 text-sm mb-4";
+
   order.items.forEach(i => {
     const li = document.createElement("li");
-    li.textContent = `${i.name} × ${i.qty}`;
+    li.innerHTML = `
+      ${i.name}
+      <span class="font-bold ml-1">× ${i.qty}</span>
+    `;
     list.appendChild(li);
   });
 
@@ -97,7 +130,7 @@ function renderOrder(order) {
   }
 
   if (order.status === "cooking") {
-    actions.appendChild(btn("✅ Mark Ready", "green", () =>
+    actions.appendChild(btn("✅ Ready", "green", () =>
       updateStatus(id, "ready")
     ));
   }
@@ -119,7 +152,7 @@ function btn(text, color, onClick) {
   return b;
 }
 
-/* ================= UPDATE ================= */
+/* ================= UPDATE STATUS ================= */
 async function updateStatus(id, status) {
   await fetch(`${API_BASE}/api/orders/${id}`, {
     method: "PATCH",
@@ -142,6 +175,8 @@ enableSoundBtn.onclick = () => {
   enableSoundBtn.style.display = "none";
 };
 
+/* ================= LIVE TIMER UPDATE ================= */
+setInterval(loadOrders, 60000); // refresh timers every minute
+
 /* ================= INIT ================= */
 loadOrders();
-setInterval(loadOrders, 30000);

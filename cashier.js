@@ -145,6 +145,11 @@ function printBill(id) {
 /* ================= SOCKET ================= */
 socket.on("order:new", loadOrders);
 socket.on("order:update", loadOrders);
+socket.on("order:update", () => {
+  loadOrders();
+  loadAnalytics();
+});
+
 
 /* ================= MENU MANAGEMENT ================= */
 
@@ -249,6 +254,26 @@ async function toggleMenu(id, available) {
   });
 }
 
+async function loadAnalytics() {
+  try {
+    const res = await fetch(`${API_BASE}/api/analytics/today`, {
+      headers: {
+        "x-access-token": CASHIER_TOKEN
+      }
+    });
+
+    const data = await res.json();
+
+    document.getElementById("a_orders").innerText = data.totalOrders;
+    document.getElementById("a_revenue").innerText = data.totalRevenue;
+  } catch (err) {
+    console.error("Analytics load error:", err);
+  }
+}
+
+
 /* ================= INIT ================= */
 loadOrders();
 loadMenu();
+loadAnalytics();
+
