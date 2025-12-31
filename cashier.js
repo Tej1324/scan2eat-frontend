@@ -8,14 +8,17 @@ const socket = io(API_BASE);
 /* ================= DOM ================= */
 const ordersList = document.getElementById("ordersList");
 const emptyState = document.getElementById("emptyState");
+const menuList = document.getElementById("menuList");
 
 /* ================= STATE ================= */
 let cache = {};
 
-/* ================= LOAD ================= */
+/* ================= LOAD ORDERS ================= */
 async function loadOrders() {
   try {
     const res = await fetch(`${API_BASE}/api/orders`);
+    if (!res.ok) throw new Error("Orders fetch failed");
+
     const orders = await res.json();
 
     ordersList.innerHTML = "";
@@ -33,7 +36,7 @@ async function loadOrders() {
   }
 }
 
-/* ================= RENDER ================= */
+/* ================= RENDER ORDER ================= */
 function renderOrder(order) {
   const id = order._id;
   cache[id] = order;
@@ -93,6 +96,7 @@ function btn(text, color, onClick) {
     green: "bg-green-600 hover:bg-green-700",
     blue: "bg-blue-600 hover:bg-blue-700"
   };
+
   const b = document.createElement("button");
   b.textContent = text;
   b.className = `${styles[color]} text-white px-3 py-1 rounded text-sm`;
@@ -100,7 +104,7 @@ function btn(text, color, onClick) {
   return b;
 }
 
-/* ================= UPDATE ================= */
+/* ================= UPDATE STATUS ================= */
 async function updateStatus(id, status) {
   await fetch(`${API_BASE}/api/orders/${id}`, {
     method: "PATCH",
@@ -112,19 +116,14 @@ async function updateStatus(id, status) {
   });
 }
 
-/* ================= PRINT ================= */
+/* ================= PRINT BILL ================= */
 function printBill(id) {
   const o = cache[id];
   if (!o) return;
 
   let rows = "";
   o.items.forEach(i => {
-    rows += `
-      <tr>
-        <td>${i.name} × ${i.qty}</td>
-        <td align="right">₹ ${i.price * i.qty}</td>
-      </tr>
-    `;
+    rows += `<tr><td>${i.name} × ${i.qty}</td><td align="right">₹ ${i.price * i.qty}</td></tr>`;
   });
 
   const w = window.open("", "BILL", "width=300,height=400");
@@ -147,5 +146,72 @@ function printBill(id) {
 socket.on("order:new", loadOrders);
 socket.on("order:update", loadOrders);
 
+/* ================= MENU MANAGEMENT ================= */
+
+async function loadMenu() {
+  try {
+    const res = await fetch(`${API_BASE}/api/menu/all`, {
+      headers: { "x-access-token": CASHIER_TOKEN }
+    });
+
+    if (!res.ok) throw new Error("Menu fetch failed");
+
+    const items = await res.json();
+    menuList.innerHTML = "";
+
+    items.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "bg-white p-4 rounded shadow flex justify-between items-center";
+
+      div.innerHTML = `
+        <div>
+          <p class="font-bold">${item.name} (₹${item.price})</p>
+          <p class="text-sm text-gray-600">${item.description || ""}</p>
+        </div>
+        <label class="flex gap-2 items-center">
+          <input type="checkbox"
+            ${item.available ? "checked" : ""}
+            onchange="toggleMenu('${item._id}', this.checked)">
+          Available
+        </label>
+      `;
+
+      menuList.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Menu load error:", err);
+  }
+}
+
+async function addMenuItem() {
+  const name = document.getElementById("m_name").value;
+  const price = Number(document.getElementById("m_price").value);
+  const imageUrl = document.getElementById("m_image").value;
+  const description = document.getElementById("m_desc").value;
+
+  await fetch(`${API_BASE}/api/menu`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-access-token": CASHIER_TOKEN
+    },
+    body: JSON.stringify({ name, price, imageUrl, description })
+  });
+
+  loadMenu();
+}
+
+async function toggleMenu(id, available) {
+  await fetch(`${API_BASE}/api/menu/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "x-access-token": CASHIER_TOKEN
+    },
+    body: JSON.stringify({ available })
+  });
+}
+
 /* ================= INIT ================= */
 loadOrders();
+loadMenu();

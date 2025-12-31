@@ -6,137 +6,117 @@
   <title>TableQR - Menu</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
+
 <body class="bg-gray-100 font-sans">
 
-  <!-- Header -->
-  <header class="bg-white shadow fixed top-0 left-0 w-full z-50">
-    <div class="max-w-6xl mx-auto flex items-center justify-between p-4">
-      <h1 class="text-2xl font-bold text-green-700">TableQR</h1>
-      <span class="text-sm text-gray-600">
-        Table <strong id="tableId">-</strong>
-      </span>
-    </div>
-  </header>
-
-  <!-- Main -->
-  <main class="pt-24 pb-10 px-4 max-w-6xl mx-auto">
-    <h2 class="text-xl font-semibold mb-4 text-gray-800">Menu</h2>
-    <div id="menu" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-  </main>
-
-  <!-- Bottom bar -->
-  <div class="fixed bottom-0 left-0 right-0 bg-white shadow-inner py-4 px-6 flex justify-between items-center">
-    <p class="text-sm text-gray-600">Ready to place your order?</p>
-    <button
-      id="cartButton"
-      onclick="goToCart()"
-      class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition flex items-center"
-    >
-      🛒 <span class="ml-2">Review Cart</span>
-    </button>
+<header class="bg-white shadow fixed top-0 left-0 w-full z-50">
+  <div class="max-w-6xl mx-auto flex items-center justify-between p-4">
+    <h1 class="text-2xl font-bold text-green-700">TableQR</h1>
+    <span class="text-sm text-gray-600">
+      Table <strong id="tableId">-</strong>
+    </span>
   </div>
+</header>
 
-  <script>
-  // ---------- TABLE ID ----------
-  const params = new URLSearchParams(window.location.search);
-  const tableParam = params.get("table");
-  const tableId = parseInt(tableParam);
+<main class="pt-24 pb-20 px-4 max-w-6xl mx-auto">
+  <h2 class="text-xl font-semibold mb-4 text-gray-800">Menu</h2>
+  <div id="menu" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</main>
 
-  if (!tableId || isNaN(tableId) || tableId <= 0) {
-    alert("Invalid or missing table ID. Redirecting...");
-    window.location.href = "./index.html";
-  } else {
-    document.getElementById("tableId").innerText = tableId;
+<div class="fixed bottom-0 left-0 right-0 bg-white shadow-inner py-4 px-6 flex justify-between items-center">
+  <p class="text-sm text-gray-600">Ready to place your order?</p>
+  <button onclick="goToCart()"
+    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+    🛒 Review Cart
+  </button>
+</div>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+const API_BASE = "https://scan2eat-backend-production.up.railway.app";
+
+/* TABLE */
+const tableId = Number(new URLSearchParams(window.location.search).get("table"));
+if (!tableId || tableId <= 0) {
+  alert("Invalid table ID");
+  window.location.href = "./index.html";
+}
+document.getElementById("tableId").innerText = tableId;
+
+/* CART */
+const cartKey = `cart_table_${tableId}`;
+const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+
+/* SOCKET */
+const socket = io(API_BASE);
+socket.on("menu:update", () => {
+  fetchMenu(); // 🔄 live refresh
+});
+
+/* FETCH + RENDER */
+async function fetchMenu() {
+  try {
+    const res = await fetch(`${API_BASE}/api/menu`);
+    const items = await res.json();
+    renderMenu(items);
+  } catch {
+    alert("Failed to load menu");
+  }
+}
+
+function renderMenu(items) {
+  const menu = document.getElementById("menu");
+  menu.innerHTML = "";
+
+  if (!items.length) {
+    menu.innerHTML =
+      `<p class="text-gray-500 text-sm">Menu currently unavailable</p>`;
+    return;
   }
 
-  // ---------- MENU DATA ----------
-  const menuItems = [
-    { id: 1, name: "Paneer Butter Masala", price: 180, emoji: "🧀" },
-    { id: 2, name: "Chicken Biryani", price: 220, emoji: "🍗" },
-    { id: 3, name: "Butter Naan", price: 30, emoji: "🍞" },
-    { id: 4, name: "Gulab Jamun", price: 50, emoji: "🍬" },
-    { id: 5, name: "Cold Coffee", price: 60, emoji: "🥤" },
-    { id: 6, name: "Veg Manchurian", price: 150, emoji: "🥦" }
-  ];
-
-  // ---------- CART ----------
-  const cartKey = `cart_table_${tableId}`;
-  const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
-  const menuDiv = document.getElementById("menu");
-
-  // ---------- RENDER MENU ----------
-  menuItems.forEach(item => {
+  items.forEach(item => {
     const div = document.createElement("div");
-    div.className =
-      "bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition";
+    div.className = "bg-white rounded-xl shadow overflow-hidden";
 
     div.innerHTML = `
+      <img src="${item.imageUrl || 'https://via.placeholder.com/300'}"
+           class="h-40 w-full object-cover" />
+
       <div class="p-4">
-        <h3 class="text-lg font-bold text-gray-800 mb-1">${item.emoji} ${item.name}</h3>
-        <p class="text-gray-600 text-sm mb-3">₹${item.price}</p>
-        <textarea
-          id="spec-${item.id}"
-          placeholder="Any specifications?"
-          maxlength="100"
-          rows="2"
-          class="w-full p-2 text-sm border border-gray-300 rounded
-                 focus:outline-none focus:ring-2 focus:ring-green-400 resize-none"
-        ></textarea>
-      </div>
-      <div class="bg-gray-100 p-4">
-        <button
-          type="button"
-          onclick="addToCart(${item.id})"
-          class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
-        >
+        <h3 class="text-lg font-bold">${item.name}</h3>
+        <p class="text-sm text-gray-600">${item.description || ""}</p>
+        <p class="mt-2 font-semibold">₹${item.price}</p>
+
+        <button onclick="addToCart('${item._id}', ${item.price}, '${item.name}')"
+          class="mt-3 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
           Add to Cart
         </button>
       </div>
     `;
-    menuDiv.appendChild(div);
+    menu.appendChild(div);
   });
+}
 
-  // ---------- FUNCTIONS ----------
-  function addToCart(id) {
-    const item = menuItems.find(i => i.id === id);
-    if (!item) return;
-
-    const specField = document.getElementById(`spec-${id}`);
-    const spec = (specField.value || "").trim().slice(0, 100);
-
-    const exists = cart.find(i => i.id === id && i.spec === spec);
-    if (exists) {
-      alert("Item with same specifications is already in the cart.");
-      return;
-    }
-
-    cart.push({ ...item, spec, qty: 1 });
-    localStorage.setItem(cartKey, JSON.stringify(cart));
-
-    specField.value = "";
-    updateCartBadge();
-    alert(`${item.name} added to cart.`);
+/* CART */
+function addToCart(id, price, name) {
+  const existing = cart.find(i => i.id === id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({ id, name, price, qty: 1 });
   }
+  localStorage.setItem(cartKey, JSON.stringify(cart));
+  alert("Item added to cart");
+}
 
-  function goToCart() {
-    window.location.href = `./cart.html?table=${tableId}`;
-  }
+function goToCart() {
+  window.location.href = `./cart.html?table=${tableId}`;
+}
 
-  function updateCartBadge() {
-    const cartButton = document.getElementById("cartButton");
-    const oldBadge = cartButton.querySelector(".cart-count");
-    if (oldBadge) oldBadge.remove();
-
-    if (cart.length > 0) {
-      const badge = document.createElement("span");
-      badge.textContent = `(${cart.length})`;
-      badge.className = "cart-count ml-2 text-white text-sm";
-      cartButton.appendChild(badge);
-    }
-  }
-
-  updateCartBadge();
+/* INIT */
+fetchMenu();
 </script>
+
 
 </body>
 </html>
