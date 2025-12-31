@@ -184,22 +184,59 @@ async function loadMenu() {
 }
 
 async function addMenuItem() {
-  const name = document.getElementById("m_name").value;
+  const name = document.getElementById("m_name").value.trim();
   const price = Number(document.getElementById("m_price").value);
-  const imageUrl = document.getElementById("m_image").value;
-  const description = document.getElementById("m_desc").value;
+  const description = document.getElementById("m_desc").value.trim();
+  const imageFile = document.getElementById("m_image").files[0];
 
+  if (!name || !price || !imageFile) {
+    alert("Name, price and image are required");
+    return;
+  }
+
+  /* 1️⃣ Upload image to Cloudinary */
+  const fd = new FormData();
+  fd.append("image", imageFile);
+
+  const imgRes = await fetch(`${API_BASE}/api/menu/upload`, {
+    method: "POST",
+    headers: {
+      "x-access-token": CASHIER_TOKEN
+    },
+    body: fd
+  });
+
+  if (!imgRes.ok) {
+    alert("Image upload failed");
+    return;
+  }
+
+  const { imageUrl } = await imgRes.json();
+
+  /* 2️⃣ Create menu item */
   await fetch(`${API_BASE}/api/menu`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-access-token": CASHIER_TOKEN
     },
-    body: JSON.stringify({ name, price, imageUrl, description })
+    body: JSON.stringify({
+      name,
+      price,
+      description,
+      imageUrl
+    })
   });
+
+  // Reset form
+  document.getElementById("m_name").value = "";
+  document.getElementById("m_price").value = "";
+  document.getElementById("m_desc").value = "";
+  document.getElementById("m_image").value = "";
 
   loadMenu();
 }
+
 
 async function toggleMenu(id, available) {
   await fetch(`${API_BASE}/api/menu/${id}`, {
