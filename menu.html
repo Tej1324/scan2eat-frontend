@@ -53,16 +53,29 @@ socket.on("menu:update", () => {
   fetchMenu(); // 🔄 live refresh
 });
 
-/* FETCH + RENDER */
 async function fetchMenu() {
   try {
     const res = await fetch(`${API_BASE}/api/menu`);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const items = await res.json();
+
+    if (!Array.isArray(items)) {
+      throw new Error("Invalid menu response");
+    }
+
     renderMenu(items);
-  } catch {
-    alert("Failed to load menu");
+  } catch (err) {
+    console.error("Menu load error:", err);
+
+    // Only alert if menu is actually empty
+    alert("Menu is temporarily unavailable. Please try again.");
   }
 }
+
 
 function renderMenu(items) {
   const menu = document.getElementById("menu");
