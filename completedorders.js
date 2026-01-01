@@ -1,5 +1,5 @@
 /* ================= CONFIG ================= */
-const API_BASE = "https://scan2eat-backend.onrender.com";
+const API_BASE = "https://scan2eat-backend-production.up.railway.app";
 
 /* ================= SOCKET ================= */
 const socket = io(API_BASE);
@@ -9,10 +9,6 @@ const ordersDiv = document.getElementById("orders");
 const emptyState = document.getElementById("emptyState");
 
 /* ================= HELPERS ================= */
-function getOrderId(order) {
-  return order._id || order.id;
-}
-
 function minutesAgo(date) {
   return Math.floor((Date.now() - new Date(date).getTime()) / 60000);
 }
@@ -21,6 +17,8 @@ function minutesAgo(date) {
 async function loadCompletedOrders() {
   try {
     const res = await fetch(`${API_BASE}/api/orders`);
+    if (!res.ok) throw new Error("Orders fetch failed");
+
     const orders = await res.json();
 
     const completed = orders.filter(
