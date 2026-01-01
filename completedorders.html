@@ -4,52 +4,125 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Completed Orders – Scan2Eat</title>
-
-  <!-- Disable favicon -->
+  <title>Completed Orders & Analytics – Scan2Eat</title>
   <link rel="icon" href="data:," />
 
-  <!-- Tailwind CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
     rel="stylesheet"
   />
 
-  <!-- Socket.IO -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
 
-  <main class="max-w-6xl mx-auto p-6">
-
-    <!-- HEADER -->
-    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-      <h1 class="text-2xl font-bold text-gray-800">
-        ✅ Completed Orders
-      </h1>
-
-      <a
-        href="kitchen.html"
-        class="bg-gray-800 hover:bg-black text-white px-4 py-2 rounded text-sm"
-      >
-        ⬅ Back to Kitchen
+<!-- NAV -->
+<header class="bg-white shadow sticky top-0 z-10">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+    <h1 class="font-bold text-lg">📊 Completed Orders & Analytics</h1>
+    <div class="flex gap-2 text-xs">
+      <a href="cashier.html" class="px-3 py-1 bg-gray-800 text-white rounded">
+        Cashier
+      </a>
+      <a href="kitchen.html" class="px-3 py-1 bg-green-600 text-white rounded">
+        Kitchen
       </a>
     </div>
+  </div>
+</header>
 
-    <!-- EMPTY STATE -->
-    <p
-      id="emptyState"
-      class="text-gray-500 text-sm text-center mt-16"
-    >
-      No completed orders yet.
+<main class="max-w-6xl mx-auto p-4 space-y-6">
+
+  <!-- DATE + SORT FILTERS -->
+  <div class="bg-white p-4 rounded shadow flex flex-col md:flex-row gap-4">
+
+    <div>
+      <label class="text-xs text-gray-600">From</label>
+      <input id="fromDate" type="date"
+        class="border px-3 py-2 rounded text-sm" />
+    </div>
+
+    <div>
+      <label class="text-xs text-gray-600">To</label>
+      <input id="toDate" type="date"
+        class="border px-3 py-2 rounded text-sm" />
+    </div>
+
+    <div>
+      <label class="text-xs text-gray-600">Sort</label>
+      <select id="sortFilter"
+        class="border px-3 py-2 rounded text-sm">
+        <option value="latest">Latest first</option>
+        <option value="oldest">Oldest first</option>
+      </select>
+    </div>
+
+    <div class="flex items-end gap-2">
+      <button onclick="loadRange()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
+        Apply
+      </button>
+
+      <button onclick="exportCSV()"
+        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm">
+        CSV
+      </button>
+    </div>
+
+  </div>
+
+  <!-- STATS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white p-4 rounded shadow">
+      <p class="text-xs text-gray-500">Orders</p>
+      <p class="text-2xl font-bold"><span id="totalOrders">—</span></p>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <p class="text-xs text-gray-500">Revenue</p>
+      <p class="text-2xl font-bold text-green-600">
+        ₹ <span id="totalRevenue">—</span>
+      </p>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <p class="text-xs text-gray-500">GST (5%)</p>
+      <p class="text-2xl font-bold text-yellow-600">
+        ₹ <span id="gstAmount">—</span>
+      </p>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow">
+      <p class="text-xs text-gray-500">Net Revenue</p>
+      <p class="text-2xl font-bold text-blue-600">
+        ₹ <span id="netRevenue">—</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <div class="bg-white p-5 rounded shadow">
+    <h2 class="font-semibold mb-2">🧠 Smart Insights</h2>
+    <ul id="insights" class="list-disc pl-5 text-sm text-gray-700"></ul>
+  </div>
+
+  <!-- COMPLETED ORDERS -->
+  <div>
+    <h2 class="font-semibold text-gray-800 mb-2">
+      ✅ Completed Orders
+    </h2>
+
+    <p id="emptyState"
+       class="text-sm text-gray-500 text-center mt-6">
+      No completed orders
     </p>
 
-    <!-- ORDERS -->
-    <div id="orders" class="space-y-6 mt-4"></div>
+    <div id="orders" class="space-y-3"></div>
+  </div>
 
-  </main>
+</main>
 
-  <script src="completedorders.js"></script>
+<script src="completedorders.js"></script>
 </body>
 </html>
