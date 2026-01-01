@@ -20,7 +20,6 @@ const alertAudio = new Audio(
 );
 
 /* ================= HELPERS ================= */
-
 function minutesAgo(date) {
   return Math.floor((Date.now() - new Date(date).getTime()) / 60000);
 }
@@ -31,7 +30,6 @@ function playSound() {
   alertAudio.play().catch(() => {});
 }
 
-/* TIMER → PRIORITY COLOR */
 function urgencyClass(mins) {
   if (mins >= 20) return "border-red-600 animate-pulse";
   if (mins >= 10) return "border-yellow-500";
@@ -48,50 +46,41 @@ function statusBadge(status) {
 
 /* ================= LOAD ORDERS ================= */
 async function loadOrders(playAlert = false) {
-  try {
-    const res = await fetch(`${API_BASE}/api/orders`);
-    const orders = await res.json();
+  const res = await fetch(`${API_BASE}/api/orders`);
+  const orders = await res.json();
 
-    const visible = orders
-      .filter(o => o.status === "pending" || o.status === "cooking")
-      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const visible = orders
+    .filter(o => o.status === "pending" || o.status === "cooking")
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-    ordersDiv.innerHTML = "";
+  ordersDiv.innerHTML = "";
 
-    if (!visible.length) {
-      emptyState.style.display = "block";
-      urgentCountEl.innerText = "0";
-      return;
+  if (!visible.length) {
+    emptyState.style.display = "block";
+    urgentCountEl.innerText = "0";
+    return;
+  }
+
+  emptyState.style.display = "none";
+  let urgentCount = 0;
+
+  visible.forEach(order => {
+    const mins = minutesAgo(order.createdAt);
+    if (mins >= 20) urgentCount++;
+
+    if (!knownOrderIds.has(order._id) && playAlert) {
+      playSound();
     }
 
-    emptyState.style.display = "none";
+    knownOrderIds.add(order._id);
+    renderOrder(order, mins);
+  });
 
-    let urgentCount = 0;
-
-    visible.forEach(order => {
-      const mins = minutesAgo(order.createdAt);
-
-      if (mins >= 20) urgentCount++;
-
-      if (!knownOrderIds.has(order._id) && playAlert) {
-        playSound();
-      }
-
-      knownOrderIds.add(order._id);
-      renderOrder(order, mins);
-    });
-
-    urgentCountEl.innerText = urgentCount;
-
-  } catch (err) {
-    console.error("Kitchen load error:", err);
-  }
+  urgentCountEl.innerText = urgentCount;
 }
 
 /* ================= RENDER ================= */
 function renderOrder(order, mins) {
-  const id = order._id;
-
   const card = document.createElement("div");
   card.className = `
     bg-white shadow rounded-xl p-4 border-l-8
@@ -104,7 +93,7 @@ function renderOrder(order, mins) {
         <h2 class="text-lg font-bold">Table ${order.tableId}</h2>
         ${statusBadge(order.status)}
       </div>
-      <span class="text-sm text-gray-600">⏱ ${mins} min</span>
+      <span class="text-sm text-gray-600">${mins} min</span>
     </div>
   `;
 
@@ -113,10 +102,7 @@ function renderOrder(order, mins) {
 
   order.items.forEach(i => {
     const li = document.createElement("li");
-    li.innerHTML = `
-      ${i.name}
-      <span class="font-bold ml-1">× ${i.qty}</span>
-    `;
+    li.innerHTML = `${i.name} <b>× ${i.qty}</b>`;
     list.appendChild(li);
   });
 
@@ -124,14 +110,14 @@ function renderOrder(order, mins) {
   actions.className = "flex gap-2";
 
   if (order.status === "pending") {
-    actions.appendChild(btn("👨‍🍳 Accept", "yellow", () =>
-      updateStatus(id, "cooking")
+    actions.appendChild(button("Accept", "#f59e0b", () =>
+      updateStatus(order._id, "cooking")
     ));
   }
 
   if (order.status === "cooking") {
-    actions.appendChild(btn("✅ Ready", "green", () =>
-      updateStatus(id, "ready")
+    actions.appendChild(button("Ready", "#16a34a", () =>
+      updateStatus(order._id, "ready")
     ));
   }
 
@@ -139,15 +125,15 @@ function renderOrder(order, mins) {
   ordersDiv.appendChild(card);
 }
 
-/* ================= BUTTON ================= */
-function btn(text, color, onClick) {
-  const styles = {
-    yellow: "bg-yellow-500 hover:bg-yellow-600",
-    green: "bg-green-600 hover:bg-green-700"
-  };
+/* ================= CLEAN BUTTON ================= */
+function button(text, color, onClick) {
   const b = document.createElement("button");
   b.textContent = text;
-  b.className = `${styles[color]} text-white px-4 py-1 rounded text-sm`;
+  b.style.background = color;
+  b.style.color = "white";
+  b.style.padding = "6px 14px";
+  b.style.borderRadius = "6px";
+  b.style.fontSize = "14px";
   b.onclick = onClick;
   return b;
 }
@@ -175,8 +161,8 @@ enableSoundBtn.onclick = () => {
   enableSoundBtn.style.display = "none";
 };
 
-/* ================= LIVE TIMER UPDATE ================= */
-setInterval(loadOrders, 60000); // refresh timers every minute
+/* ================= AUTO REFRESH ================= */
+setInterval(loadOrders, 60000);
 
 /* ================= INIT ================= */
 loadOrders();

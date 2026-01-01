@@ -17,67 +17,127 @@
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-50 font-sans text-gray-800">
 
-<main class="max-w-7xl mx-auto p-6">
+<main class="max-w-7xl mx-auto px-6 py-8">
 
   <!-- HEADER -->
-  <div class="flex flex-col gap-4 mb-6">
+  <header class="mb-8">
+    <div class="flex flex-col lg:flex-row justify-between gap-6">
 
-    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-      <h1 class="text-2xl font-bold text-gray-800">
-        🧩 Scan2Eat – Control Dashboard
-      </h1>
-
-      <!-- GLOBAL NAV -->
-      <div class="flex flex-wrap gap-2">
-        <a href="menu.html?table=1" class="btn">🍽 Menu</a>
-        <a href="cart.html?table=1" class="btn">🛒 Cart</a>
-        <a href="cashier.html" class="btn">💵 Cashier</a>
-         <a href="orderfood.html" class="btn">💵 Order Food</a>
-        <a href="kitchen.html" class="btn">🍳 Kitchen</a>
-        <span class="btn btn-active">🛠 Dashboard</span>
+      <!-- TITLE -->
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">
+          Scan2Eat Dashboard
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">
+          Live restaurant order control & monitoring
+        </p>
       </div>
+
+      <!-- NAVIGATION -->
+      <nav class="flex flex-wrap gap-2 items-start lg:items-center">
+        <a href="menu.html?table=1" class="nav-btn">Menu</a>
+        <a href="cart.html?table=1" class="nav-btn">Cart</a>
+        <a href="cashier.html" class="nav-btn">Cashier</a>
+        <a href="orderfood.html" class="nav-btn">Order Food</a>
+        <a href="kitchen.html" class="nav-btn">Kitchen</a>
+        <span class="nav-btn nav-active">Dashboard</span>
+      </nav>
+
     </div>
+  </header>
 
-    <!-- FILTERS -->
-    <div class="flex gap-2 flex-wrap">
-      <button onclick="setFilter('all')" class="filter-btn">All</button>
-      <button onclick="setFilter('pending')" class="filter-btn bg-red-600 text-white">Pending</button>
-      <button onclick="setFilter('cooking')" class="filter-btn bg-yellow-500 text-white">Cooking</button>
-      <button onclick="setFilter('ready')" class="filter-btn bg-blue-500 text-white">Ready</button>
-      <button onclick="setFilter('completed')" class="filter-btn bg-green-600 text-white">Completed</button>
+  <!-- FILTERS -->
+  <section class="mb-6">
+    <div class="flex flex-wrap gap-2">
+      <button onclick="setFilter('all')" class="chip chip-default">All Orders</button>
+      <button onclick="setFilter('pending')" class="chip chip-red">Pending</button>
+      <button onclick="setFilter('cooking')" class="chip chip-yellow">Cooking</button>
+      <button onclick="setFilter('ready')" class="chip chip-blue">Ready</button>
+      <button onclick="setFilter('completed')" class="chip chip-green">Completed</button>
     </div>
+  </section>
 
-  </div>
+  <!-- ORDERS LIST -->
+  <section>
+    <div id="orders" class="space-y-6"></div>
 
-  <!-- EMPTY STATE -->
-  <p id="emptyState" class="text-gray-500 text-sm text-center mt-16 hidden">
-    No orders found.
-  </p>
-
-  <!-- ORDERS -->
-  <div id="orders" class="space-y-5"></div>
+    <!-- EMPTY STATE -->
+    <div
+      id="emptyState"
+      class="hidden mt-24 flex flex-col items-center text-center"
+    >
+      <div class="text-5xl mb-4">📭</div>
+      <h3 class="font-semibold text-lg">No orders found</h3>
+      <p class="text-sm text-gray-500 mt-1">
+        Orders will appear here in real time
+      </p>
+    </div>
+  </section>
 
 </main>
 
-<script src="dashboard.js"></script>
+<script src="index.js"></script>
 
 <style>
-  .btn {
-    background: #1f2933;
-    color: white;
-    padding: 0.4rem 0.7rem;
-    border-radius: 0.375rem;
+  /* NAV BUTTONS */
+  .nav-btn {
+    padding: 0.45rem 0.9rem;
     font-size: 0.85rem;
-  }
-  .btn:hover { background: black; }
-  .btn-active { background: #16a34a; }
-  .filter-btn {
-    padding: 0.35rem 0.7rem;
-    border-radius: 0.375rem;
-    font-size: 0.8rem;
+    border-radius: 9999px;
     background: #e5e7eb;
+    color: #374151;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .nav-btn:hover {
+    background: #d1d5db;
+  }
+
+  .nav-active {
+    background: #111827;
+    color: #ffffff;
+  }
+
+  /* FILTER CHIPS */
+  .chip {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  .chip-default {
+    background: #e5e7eb;
+    color: #374151;
+  }
+
+  .chip-red {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .chip-yellow {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .chip-blue {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .chip-green {
+    background: #dcfce7;
+    color: #166534;
   }
 </style>
 
